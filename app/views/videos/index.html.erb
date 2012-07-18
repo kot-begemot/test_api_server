@@ -1,0 +1,23 @@
+<h1>Listing videos</h1>
+
+<table>
+  <tr>
+    <th>Url</th>
+    <th>Processed at</th>
+    <th>Downloaded at</th>
+    <th></th>
+  </tr>
+
+<% @videos.each do |video| %>
+  <tr>
+    <td><%= video.url %></td>
+    <td><%= video.processed_at %></td>
+    <td><%= video.downloaded_at %></td>
+    <td><%= link_to 'Show', video %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Video', new_video_path %>

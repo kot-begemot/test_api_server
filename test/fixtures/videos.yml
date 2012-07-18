@@ -1,0 +1,8 @@
+  # Read about fixtures at http://api.rubyonrails.org/classes/Fixtures.html
+
+valid:
+  url: "http://www.youtube.com/embed/diDLgFvq7bo"
+  state: new
+
+invalid:
+  url: MyString

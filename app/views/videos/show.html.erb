@@ -1,0 +1,19 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Url:</b>
+  <%= @video.url %>
+</p>
+
+<p>
+  <b>Processed at:</b>
+  <%= @video.processed_at %>
+</p>
+
+<p>
+  <b>Downloaded at:</b>
+  <%= @video.downloaded_at %>
+</p>
+
+
+<%= link_to 'Back', videos_path %>
