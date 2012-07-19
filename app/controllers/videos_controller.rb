@@ -37,7 +37,7 @@ class VideosController < ApplicationController
       format.html do
         @video = Video.new(params[:video])
         if @video.save
-          @video.delay.download_and_convert
+          @video.delay.convert!
           redirect_to @video, notice: 'Video was successfully created.'
         else
           render action: "new"
@@ -46,7 +46,7 @@ class VideosController < ApplicationController
       format.json do
         @video = Video.new JSON.parse(request.body.read)
         if @video.save
-          @video.delay.download_and_convert
+          @video.delay.convert!
           render json: @video, status: :created, location: @video
         else
           render json: @video.errors, status: :unprocessable_entity

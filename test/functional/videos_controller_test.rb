@@ -3,6 +3,7 @@ require 'test_helper'
 class VideosControllerTest < ActionController::TestCase
   setup do
     @video = videos(:valid)
+    Video.any_instance.stubs(:process_emulation).with(any_parameters).returns(true)
   end
 
   test "should get index" do
@@ -75,12 +76,33 @@ class VideosControllerTest < ActionController::TestCase
     assert page.has_content?(expected_content), "Page content was:\n#{page.source}\nExpected: #{expected_content}"
   end
 
-  test "Should show details if finished" do
+  test "Should show conversation is finished" do
     assert_equal 'new', @video.state
-    @video.download! && @video.process!
+    @video.state = 'processed'
+    @video.save
 
     visit "/videos/#{@video.id}.json"
-    expected_content = "{\"video\":{\"id\":#{@video.id},\"state\":\"finished\",\"processed_at\":\"#{@video.processed_at.iso8601}\",\"downloaded_at\":\"#{@video.downloaded_at.iso8601}\"}}"
+    expected_content = "{\"video\":{\"id\":#{@video.id},\"state\":\"processed\"}}"
+    assert page.has_content?(expected_content), "Page content was:\n#{page.source}\nExpected: #{expected_content}"
+  end
+
+  test "Should show storing is not finished" do
+    assert_equal 'new', @video.state
+    @video.state = 'storing'
+    @video.progress = 42.15
+    @video.save
+
+    visit "/videos/#{@video.id}.json"
+    expected_content = "{\"video\":{\"id\":#{@video.id},\"state\":\"storing\",\"progress\":42.15}}"
+    assert page.has_content?(expected_content), "Page content was:\n#{page.source}\nExpected: #{expected_content}"
+  end
+
+  test "Should show details if finished" do
+    assert_equal 'new', @video.state
+    @video.download! && @video.process! && @video.store!
+
+    visit "/videos/#{@video.id}.json"
+    expected_content = "{\"video\":{\"id\":#{@video.id},\"finished_at\":\"#{@video.finished_at.iso8601}\",\"resolution\":\"800x600\",\"fps\":#{@video.fps},\"video_info\":\"#{@video.resolution} (2.37:1), #{@video.fps} fps, XviD build 50 ~1760 kbps avg, 0.34 bit/pixel\",\"audio_info\":\"48 kHz, AC3 Dolby Digital, 3/2 (L,C,R,l,r) + LFE ch, ~384 kbps\",\"duration\":\"#{Time.at(@video.duration ).utc.strftime("%T")}\"}}"
     assert page.has_content?(expected_content), "Page content was:\n#{page.source}\nExpected: #{expected_content}"
   end
 

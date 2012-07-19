@@ -4,6 +4,7 @@ class VideoTest < ActiveSupport::TestCase
 
   setup do
     @video = Video.create url: "http://www.youtube.com/embed/diDLgFvq7bo"
+    Video.any_instance.stubs(:process_emulation).with(any_parameters).returns(true)
   end
 
   test "Mailfirmed urls" do
@@ -36,8 +37,8 @@ class VideoTest < ActiveSupport::TestCase
   test "Initialize processing" do
     @video.download!
     assert_equal 'downloaded', @video.reload.state
-
     @video.stubs(:start_conversion).returns(true)
+
     @video.process!
     assert_equal 'processing', @video.reload.state
   end
@@ -48,15 +49,36 @@ class VideoTest < ActiveSupport::TestCase
     assert_nil @video.processed_at
 
     @video.process!
-    assert_equal 'finished', @video.reload.state
+    assert_equal 'processed', @video.reload.state
     assert_not_nil @video.processed_at
+  end
+
+  test "Initialize storing" do
+    @video.download!
+    @video.process!
+    assert_equal 'processed', @video.reload.state
+    @video.stubs(:move_to_storage).returns(true)
+
+    @video.store!
+    assert_equal 'storing', @video.reload.state
+  end
+
+  test "Change state after storing" do
+    @video.download!
+    @video.process!
+    assert_equal 'processed', @video.reload.state
+    assert_nil @video.finished_at
+
+    @video.store!
+    assert_equal 'finished', @video.reload.state
+    assert_not_nil @video.finished_at
   end
 
   test "Download and process assyncronously" do
     Delayed::Worker.new.work_off
     assert_equal 0, Delayed::Job.count
 
-    @video.delay.download_and_convert
+    @video.delay.convert!
 
     assert_equal 1, Delayed::Job.count
     Delayed::Worker.new.work_off
