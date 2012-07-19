@@ -6,9 +6,6 @@ class Video < ActiveRecord::Base
   CONVERSION_FORMAT = 'AVI'.freeze
 
   state_machine :state, initial: :new do
-    # new: order was just created
-    # paid: order was paid
-    # expired: order pay time is expired
     state :new, :downloading, :downloaded, :processing, :processed, :storing, :finished
 
     event :download do
